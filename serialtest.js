@@ -2,8 +2,9 @@ const Datastream = require('./lib/Datastream.class');
 
 const LED_COUNT = 150;
 const UPDATE_FPS = 30;
-const dataPackage = Array.from({ length: LED_COUNT }, e => Array(4).fill(0));
-dataPackage.forEach((arr, i) => arr[0] = i);
+const dataPackage = Array.from({ length: LED_COUNT }, e => Array(3).fill(0));
+// const dataPackage = Array.from({ length: LED_COUNT }, e => Array(4).fill(0));
+// dataPackage.forEach((arr, i) => arr[0] = i);
 
 if (process.argv[2] === 'test') {
     console.log(`TEST mode activated, sending random LED values at ${UPDATE_FPS}fps`);
@@ -43,14 +44,17 @@ if (process.argv[2] !== 'test') {
             console.log('updatePixel triggered', pixel, r,g,b);
             pixel.forEach(i => {
                 const oldRGB =[
+                    dataPackage[i][0],
                     dataPackage[i][1],
-                    dataPackage[i][2],
-                    dataPackage[i][3]
+                    dataPackage[i][2]
                 ];
                 // dataPackage[i] = [r,g,b];
                 colorFade(oldRGB, [r,g,b], 1000, ({ r, g, b }) => {
                     // console.log('color fade', r,g,b);
-                    dataPackage[i] = [i, r, g, b];
+                    dataPackage[i] = [
+                        // i, 
+                        r, g, b
+                    ];
                 });
             });
         })
@@ -69,7 +73,7 @@ async function sendDatastream() {
     if (process.argv[2] === 'test') {
         for (let i = 0; i < LED_COUNT; i++) {
             dataPackage[i] = [
-                i,
+                // i,
                 randomValue(0, 5) * 10,
                 randomValue(0, 5) * 10,
                 randomValue(0, 5) * 10
