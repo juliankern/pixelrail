@@ -43,13 +43,14 @@ if (process.argv[2] === 'test') {
         dataPackage = [...data];
     });
     
-    const stream = new Datastream();
-    stream.on(Datastream.EVENTS.CONNECTION_OPEN, _ => {
-        console.log('open! sending data...');
-        sendDatastream();
-        stream.start();
-    })
 }
+
+const stream = new Datastream();
+stream.on(Datastream.EVENTS.CONNECTION_OPEN, _ => {
+    console.log('open! sending data...');
+    sendDatastream();
+    stream.start();
+})
 
 async function sendDatastream() {
     if (process.argv[2] === 'test') {
