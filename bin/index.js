@@ -113,8 +113,9 @@ async function sendDatastream() {
         }
     }
 
-    const splitData = splitInChunks(dataPackage, useablePorts.length);
+    const splitData = splitInChunks(dataPackage, LED_COUNT / useablePorts.length);
 
+    // console.log('splitData[i]', splitData);
     useablePorts.forEach((port, i) => {
         port.stream.setData(splitData[i]);
     });
