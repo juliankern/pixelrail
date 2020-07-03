@@ -2,7 +2,7 @@ const { ArtNet } = require('artnode');
 
 const artnet = new ArtNet({ isController: true });
 
-const universe = artnet.getUniverse(0);
+const universe = artnet.getUniverse(1);
 
 universe.on('data', ({ data, changed }) => {
     changed.forEach(({ address, value }) => {
