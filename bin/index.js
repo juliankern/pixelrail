@@ -19,7 +19,7 @@ if (process.argv[2] === 'test') {
         useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
         useablePorts.sort((a, b) => +a.locationId - +b.locationId);
 
-        cosnole.log('useablePorts', useablePorts);
+        console.log('useablePorts', useablePorts);
     })();
 
     process.exit(0);
