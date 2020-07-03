@@ -37,11 +37,7 @@ if (process.argv[2] === 'test') {
     hkAdapter.on('data', ({ pixel, r, g, b }) => {
         console.log('updatePixel triggered', pixel, r, g, b);
         pixel.forEach(i => {
-            const oldRGB = [
-                dataPackage[i][0],
-                dataPackage[i][1],
-                dataPackage[i][2]
-            ];
+            const oldRGB = [...dataPackage[i]];
             // dataPackage[i] = [r,g,b];
             colorFade(oldRGB, [r, g, b], 1000, ({ r, g, b }) => {
                 // console.log('color fade', r,g,b);
@@ -74,6 +70,7 @@ if (process.argv[2] === 'test') {
     const availablePorts = await SerialPort.list();
     useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
     useablePorts.sort((a, b) => +a.locationId - +b.locationId);
+    useablePorts = [useablePorts[0]];
 
     init();
 })();
