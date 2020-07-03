@@ -70,7 +70,7 @@ if (process.argv[2] === 'test') {
     const availablePorts = await SerialPort.list();
     useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
     useablePorts.sort((a, b) => +a.locationId - +b.locationId);
-    useablePorts = [useablePorts[0]];
+    // useablePorts = [useablePorts[0]];
 
     init();
 })();
