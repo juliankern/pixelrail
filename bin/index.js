@@ -18,7 +18,7 @@ if (process.argv[2] === 'test') {
     })();
 } else {
     const HomeKitAdapter = require('../lib/Adapters/HomeKit');
-    const ArtNetAdapter = require('../lib/Adapters/ArtNet');
+    // const ArtNetAdapter = require('../lib/Adapters/ArtNet');
     const WebsocketAdapter = require('../lib/Adapters/Websocket');
 
     const hkAdapter = new HomeKitAdapter();
