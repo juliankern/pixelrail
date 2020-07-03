@@ -22,7 +22,7 @@ if (process.argv[2] === 'test') {
     const WebsocketAdapter = require('../lib/Adapters/Websocket');
 
     const hkAdapter = new HomeKitAdapter();
-    const anAdapter = new ArtNetAdapter();
+    // const anAdapter = new ArtNetAdapter();
     const wsAdapter = new WebsocketAdapter();
 
     hkAdapter.on('data', ({ pixel, r, g, b }) => {
@@ -41,9 +41,9 @@ if (process.argv[2] === 'test') {
         });
     });
 
-    anAdapter.on('data', (data) => {
-        dataPackage.map((d, i) => data[i]);
-    });
+    // anAdapter.on('data', (data) => {
+    //     dataPackage.map((d, i) => data[i]);
+    // });
 
     wsAdapter.on('data', (data) => {
         dataPackage.map((d, i) => data[i]);
