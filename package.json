@@ -1,5 +1,5 @@
 {
-  "name": "homekitpixelrail",
+  "name": "node-pixelrail",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,6 +12,7 @@
     "dmxnet": "^0.4.1",
     "hap-nodejs": "^0.5.11",
     "node-persist": "^2.1.0",
-    "serialport": "^8.0.7"
+    "serialport": "^8.0.7",
+    "socket.io": "^2.3.0"
   }
 }
