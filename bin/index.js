@@ -16,6 +16,8 @@ if (process.argv[2] === 'test') {
     return (async () => {
         console.log(await SerialPort.list());
     })();
+
+    process.exit(0);
 } else {
     const HomeKitAdapter = require('../lib/Adapters/HomeKit');
     // const ArtNetAdapter = require('../lib/Adapters/ArtNet');
