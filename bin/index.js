@@ -17,7 +17,9 @@ if (process.argv[2] === 'test') {
     return (async () => {
         const availablePorts = await SerialPort.list();
         useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
-        useablePorts.sort((a, b) => +a.locationId - +b.locationId);
+        useablePorts.sort((a, b) => {
+            return +a.path.replace(/[^\d]*/, '') - +b.path.replace(/[^\d]*/, '');
+        });
 
         console.log('useablePorts', useablePorts);
     })();
