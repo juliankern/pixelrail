@@ -14,7 +14,11 @@ if (process.argv[2] === 'test') {
     console.log(`TEST mode activated, sending random LED values at ${UPDATE_FPS}fps`);
 } else if (process.argv[2] === 'list') {
     return (async () => {
-        console.log(await SerialPort.list());
+        const availablePorts = await SerialPort.list();
+        useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
+        useablePorts.sort((a, b) => +a.locationId - +b.locationId);
+
+        cosnole.log('useablePorts', useablePorts);
     })();
 
     process.exit(0);
