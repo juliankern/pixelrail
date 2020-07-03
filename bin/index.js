@@ -6,6 +6,7 @@ const LED_COUNT = 300;
 const UPDATE_FPS = 30;
 
 const dataPackage = Array.from({ length: LED_COUNT }, e => Array(3).fill(0));
+let useablePorts = [];
 
 // const dataPackage = Array.from({ length: LED_COUNT }, e => Array(4).fill(0));
 // dataPackage.forEach((arr, i) => arr[0] = i);
@@ -66,8 +67,6 @@ if (process.argv[2] === 'test') {
         });
     });
 }
-
-let useablePorts = [];
 
 (async () => {
     const availablePorts = await SerialPort.list();
