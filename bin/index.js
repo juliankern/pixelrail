@@ -2,7 +2,7 @@ const Datastream = require('../lib/Datastream.class');
 const SerialPort = require('serialport');
 // const { init } = require('hap-nodejs');
 
-const LED_COUNT = 150;
+const LED_COUNT = 300;
 const UPDATE_FPS = 30;
 
 const dataPackage = Array.from({ length: LED_COUNT }, e => Array(3).fill(0));
@@ -112,7 +112,7 @@ async function sendDatastream() {
         }
     }
 
-    const splitData = splitInChunks(dataPackage, LED_COUNT);
+    const splitData = splitInChunks(dataPackage, LED_COUNT / useablePorts.length);
 
     console.log('splitData[i]', splitData.length, dataPackage.length);
     useablePorts.forEach((port, i) => {
