@@ -34,14 +34,18 @@ if (process.argv[2] === 'test') {
     // const anAdapter = new ArtNetAdapter();
     const wsAdapter = new WebsocketAdapter();
 
-    hkAdapter.on('data', ({ pixel, r, g, b }) => {
-        console.log('updatePixel triggered', pixel, r, g, b);
+    hkAdapter.on('data', ({ pixel, rgb, oldRgb }) => {
+        console.log('updatePixel triggered', pixel, rgb);
 
-        const oldRGB = [...dataPackage[pixel[0]]];
-        colorFade(oldRGB, [r, g, b], 1000, ({ r, g, b }) => {
-            // console.log('color fade', r,g,b);
-            pixel.forEach(p => dataPackage[p] = [r, g, b]);
-        });
+        colorFade(
+            [oldRgb.r, oldRgb.g, oldRgb.b], 
+            [rgb.r, rgb.g, rgb.b], 
+            1000, 
+            ({ r, g, b }) => {
+                // console.log('color fade', r,g,b);
+                pixel.forEach(p => dataPackage[p] = [r, g, b]);
+            }
+        );
     });
 
     // anAdapter.on('data', (data) => {
