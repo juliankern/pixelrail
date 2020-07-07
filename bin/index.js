@@ -2,7 +2,7 @@ const Datastream = require('../lib/Datastream.class');
 const SerialPort = require('serialport');
 // const { init } = require('hap-nodejs');
 
-const LED_COUNT = 300;
+const LED_COUNT = 150;
 const UPDATE_FPS = 30;
 
 const dataPackage = Array.from({ length: LED_COUNT }, e => Array(3).fill(0));
