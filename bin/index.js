@@ -98,8 +98,6 @@ function init() {
 
 async function sendDatastream() {
     if (process.argv[2] === 'test') {
-        console.log('sending testdata...');
-        
         for (let i = 0; i < LED_COUNT; i++) {
             dataPackage[i] = [
                 // i,
