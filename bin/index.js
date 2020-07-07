@@ -81,15 +81,15 @@ function init() {
         port.stream = new Datastream(port.path);
         
         port.stream.on(Datastream.EVENTS.CONNECTION_OPEN, _ => {
-            console.log('open! sending data...');
             openPorts++;
             // port.stream.start();
             portOpened();
         });
     });
-
+    
     function portOpened() {
         if (openPorts === useablePorts.length) {
+            console.log(`opened ${openPorts} port(s)! sending data...`);
             sendDatastream();
             useablePorts.forEach(_ => _.stream.start());
         }
