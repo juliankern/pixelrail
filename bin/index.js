@@ -14,7 +14,7 @@ let useablePorts = [];
 if (process.argv[2] === 'test') {
     console.log(`TEST mode activated, sending random LED values at ${UPDATE_FPS}fps`);
 } else if (process.argv[2] === 'list') {
-    return (async () => {
+    (async () => {
         const availablePorts = await SerialPort.list();
         useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
         useablePorts.sort((a, b) => {
@@ -22,9 +22,9 @@ if (process.argv[2] === 'test') {
         });
 
         console.log('useablePorts', useablePorts);
+        process.exit(0);
     })();
 
-    process.exit(0);
 } else {
     const HomeKitAdapter = require('../lib/Adapters/HomeKit');
     // const ArtNetAdapter = require('../lib/Adapters/ArtNet');
@@ -36,13 +36,11 @@ if (process.argv[2] === 'test') {
 
     hkAdapter.on('data', ({ pixel, r, g, b }) => {
         console.log('updatePixel triggered', pixel, r, g, b);
-        pixel.forEach(i => {
-            const oldRGB = [...dataPackage[i]];
-            // dataPackage[i] = [r,g,b];
-            colorFade(oldRGB, [r, g, b], 1000, ({ r, g, b }) => {
-                // console.log('color fade', r,g,b);
-                dataPackage[i] = [r, g, b];
-            });
+
+        const oldRGB = [...dataPackage[pixel[0]]];
+        colorFade(oldRGB, [r, g, b], 1000, ({ r, g, b }) => {
+            // console.log('color fade', r,g,b);
+            pixel.forEach(p => dataPackage[p] = [r, g, b]);
         });
     });
 
