@@ -35,7 +35,7 @@ if (process.argv[2] === 'test') {
     const wsAdapter = new WebsocketAdapter();
 
     hkAdapter.on('data', ({ pixel, rgb, oldRgb }) => {
-        // console.log('updatePixel triggered', pixel, rgb, oldRgb);
+        console.log('updatePixel triggered', pixel, oldRgb, rgb);
 
         colorFade(
             [oldRgb.r, oldRgb.g, oldRgb.b], 
