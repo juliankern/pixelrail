@@ -13,6 +13,6 @@
     "hap-nodejs": "^0.5.11",
     "node-persist": "^2.1.0",
     "serialport": "^8.0.7",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.4.0"
   }
 }
