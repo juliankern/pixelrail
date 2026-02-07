@@ -1,5 +1,9 @@
 node_modules/
 .node-persist/
+.node-persist_BACKUP/
+.node-persist_neu/
 .vscode/
 persist/
+persist_BACKUP/
+persist_neu/
 logs/
