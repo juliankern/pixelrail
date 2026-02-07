@@ -9,9 +9,9 @@
   "author": "Julian Kern <mail@juliankern.com>",
   "license": "ISC",
   "dependencies": {
+    "@homebridge/hap-nodejs": "^2.0.2",
     "artnode": "0.0.1",
     "bonjour": "^3.5.0",
-    "hap-nodejs": "^0.5.11",
     "node-gameloop": "^0.1.4",
     "node-persist": "^2.1.0",
     "serialport": "^8.0.7",
