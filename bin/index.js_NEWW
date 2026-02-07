@@ -1,0 +1,147 @@
+const SerialPort = require('serialport');
+const EventEmitter = require('events');
+const events = new EventEmitter();
+
+const LED_COUNT = 300;
+const UPDATE_FPS = 30;
+
+const _dataPackage = Array.from({ length: LED_COUNT }, e => Array(3).fill(0));
+const dataPackage = new Proxy(_dataPackage, {
+    get(target, key) {
+        return target[key]
+    },
+    set(target, key, value) {
+        const oldData = _dataPackage
+        target[key] = value;
+
+        events.emit('data', { oldData, newData: _dataPackage, key, value });
+    },
+})
+let useablePorts = [];
+
+console.log()
+
+function allLightsOff() {
+    const ledsOffPackage = Array.from({ length: LED_COUNT * 3 }).fill(0);
+    return dataPackage.flat().every((value, index) => value === ledsOffPackage[index])
+}
+
+if (process.argv[2] === 'test') {
+    console.log(`TEST mode activated, sending random LED values at ${UPDATE_FPS}fps`);
+} else if (process.argv[2] === 'list') {
+    (async () => {
+        const availablePorts = await SerialPort.list();
+        useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
+        useablePorts.sort((a, b) => {
+            return +a.path.replace(/[^\d]*/, '') - +b.path.replace(/[^\d]*/, '');
+        });
+
+        console.log('useablePorts', useablePorts);
+        process.exit(0);
+    })();
+
+} else {
+    const HomeKitAdapter = require('../lib/Adapters/HomeKit');
+
+    const hkAdapter = new HomeKitAdapter();
+
+    hkAdapter.on('data', ({ pixel, rgb, oldRgb }) => {
+        console.log('updatePixel triggered', pixel, oldRgb, rgb);
+
+        colorFade(
+            [oldRgb.r, oldRgb.g, oldRgb.b], 
+            [rgb.r, rgb.g, rgb.b], 
+            1000, 
+            ({ r, g, b }) => {
+                // console.log('color fade', r,g,b);
+                pixel.forEach(p => dataPackage[p] = [r, g, b]);
+            }
+        );
+    });
+
+}
+
+const randomValue = (min, max) => Math.floor(Math.random() * (+max - +min)) + +min;
+
+(async () => {
+    // init();
+    initWLED();
+})();
+
+
+function initWLED() {
+    // let start = Date.now();
+    const dgram = require('dgram');
+    
+    const client = dgram.createSocket('udp4');
+
+    client.on('error', (err) => {
+        console.log(`client error:\n${err.stack}`);
+        client.close();
+    });
+
+    client.on('message', (msg, rinfo) => {
+        console.log(`client got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+    });
+
+    // events.on('data', () => {
+    //     // console.log('DATA CHANGED', key, value)
+    //     sendDatabit()
+    // })
+
+    sendDatastream();
+
+    async function sendDatastream() {
+        // console.log('send datastream...', Date.now() - start);
+        // start = Date.now();
+        if (process.argv[2] === 'test') {
+            for (let i = 0; i < LED_COUNT; i++) {
+                dataPackage[i] = [
+                    // i,
+                    randomValue(0, 5) * 10,
+                    randomValue(0, 5) * 10,
+                    randomValue(0, 5) * 10
+                ];
+            }
+        }
+
+        if (!allLightsOff()) {
+            await sendDatabit()
+        } else {
+            // console.log('sending nothing for now')
+        }
+    
+        setTimeout(_ => {
+            sendDatastream();
+        }, 1000 / UPDATE_FPS);
+    }
+
+    async function sendDatabit() {
+        const message = [2, 1, ...dataPackage]
+        
+        client.send(Buffer.from(message.flat(5)), 21324, 'wled-pixelrail.local', (err) => {
+            if (err) console.error('ERROR', err)
+        });
+    }
+}
+
+function colorFade(start, end, duration, callback) {
+    var interval = 25;
+    var steps = duration / interval;
+    var step_u = 1.0 / steps;
+    var u = 0.0;
+    var theInterval = setInterval(function () {
+        if (u >= 1.0) {
+            clearInterval(theInterval);
+        }
+        var r = Math.round(lerp(start[0], end[0], u));
+        var g = Math.round(lerp(start[1], end[1], u));
+        var b = Math.round(lerp(start[2], end[2], u));
+        callback({ r, g, b });
+        u += step_u;
+    }, interval);
+}
+
+function lerp(a, b, u) {
+    return (1 - u) * a + u * b;
+}
