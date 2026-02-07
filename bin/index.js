@@ -1,140 +1,116 @@
-const Datastream = require('../lib/Datastream.class');
-const SerialPort = require('serialport');
-// const { init } = require('hap-nodejs');
+const dgram = require('dgram');
+const bonjour = require('bonjour')()
 
 const LED_COUNT = 300;
-const UPDATE_FPS = 30;
+const UPDATE_FPS = 20;
 
 const dataPackage = Array.from({ length: LED_COUNT }, e => Array(3).fill(0));
-let useablePorts = [];
+let allOffFirst = false;
+let wledAddress = 'wled-pixelrail.local';
+const wledName = 'wled-pixelrail'
 
-// const dataPackage = Array.from({ length: LED_COUNT }, e => Array(4).fill(0));
-// dataPackage.forEach((arr, i) => arr[0] = i);
+console.log()
+
+function allLightsOff() {
+    const ledsOffPackage = Array.from({ length: LED_COUNT * 3 }).fill(0);
+    return dataPackage.flat().every((value, index) => value === ledsOffPackage[index])
+}
 
 if (process.argv[2] === 'test') {
     console.log(`TEST mode activated, sending random LED values at ${UPDATE_FPS}fps`);
-} else if (process.argv[2] === 'list') {
-    (async () => {
-        const availablePorts = await SerialPort.list();
-        useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
-        useablePorts.sort((a, b) => {
-            return +a.path.replace(/[^\d]*/, '') - +b.path.replace(/[^\d]*/, '');
-        });
-
-        console.log('useablePorts', useablePorts);
-        process.exit(0);
-    })();
-
 } else {
     const HomeKitAdapter = require('../lib/Adapters/HomeKit');
-    // const ArtNetAdapter = require('../lib/Adapters/ArtNet');
-    const WebsocketAdapter = require('../lib/Adapters/Websocket');
 
     const hkAdapter = new HomeKitAdapter();
-    // const anAdapter = new ArtNetAdapter();
-    const wsAdapter = new WebsocketAdapter();
 
     hkAdapter.on('data', ({ pixel, rgb, oldRgb }) => {
         console.log('updatePixel triggered', pixel, oldRgb, rgb);
 
         colorFade(
-            [oldRgb.r, oldRgb.g, oldRgb.b], 
-            [rgb.r, rgb.g, rgb.b], 
-            1000, 
+            [oldRgb.r, oldRgb.g, oldRgb.b],
+            [rgb.r, rgb.g, rgb.b],
+            1000,
             ({ r, g, b }) => {
                 // console.log('color fade', r,g,b);
                 pixel.forEach(p => dataPackage[p] = [r, g, b]);
+
+                if (r === 0 && g === 0 && b === 0) {
+                    if (allLightsOff()) {
+                        allOffFirst = true
+                    }
+                }
             }
         );
     });
 
-    // anAdapter.on('data', (data) => {
-    //     dataPackage.map((d, i) => data[i]);
-    // });
-
-    wsAdapter.on('data', (data) => {
-        dataPackage.map((d, i) => data[i]);
-    });
-
-    wsAdapter.on('data-fade', (data) => {
-        const oldData = [...dataPackage];
-
-        dataPackage.forEach((pixel, i) => {
-            colorFade(oldData[i], data[i], 1000, ({ r, g, b }) => {
-                // console.log('color fade', i, [r,g,b]);
-                dataPackage[i] = [r, g, b];
-            });
-        });
-    });
 }
-
-(async () => {
-    const availablePorts = await SerialPort.list();
-    useablePorts = availablePorts.filter(_ => _.vendorId === '1a86');
-    useablePorts.sort((a, b) => +a.locationId - +b.locationId);
-    // useablePorts = [useablePorts[0]];
-
-    init();
-})();
-
-
-function init() {
-    let openPorts = 0;
-
-    useablePorts.forEach(port => {
-        port.stream = new Datastream(port.path);
-        
-        port.stream.on(Datastream.EVENTS.CONNECTION_OPEN, _ => {
-            openPorts++;
-            // port.stream.start();
-            portOpened();
-        });
-    });
-    
-    function portOpened() {
-        if (openPorts === useablePorts.length) {
-            console.log(`opened ${openPorts} port(s)! sending data...`);
-            sendDatastream();
-            useablePorts.forEach(_ => _.stream.start());
-        }
-    }
-}
-
-async function sendDatastream() {
-    if (process.argv[2] === 'test') {
-        for (let i = 0; i < LED_COUNT; i++) {
-            dataPackage[i] = [
-                // i,
-                randomValue(0, 5) * 10,
-                randomValue(0, 5) * 10,
-                randomValue(0, 5) * 10
-            ];
-        }
-    }
-
-    const splitData = splitInChunks(dataPackage, LED_COUNT / useablePorts.length);
-
-    // console.log('splitData[i]', splitData);
-    useablePorts.forEach((port, i) => {
-        port.stream.setData(splitData[i]);
-    });
-
-    starttime = Date.now();
-
-    setTimeout(_ => {
-        sendDatastream();
-    }, 1000 / UPDATE_FPS);
-}
-
-async function sleep(time) {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(), time);
-    })
-}
-
 
 const randomValue = (min, max) => Math.floor(Math.random() * (+max - +min)) + +min;
 
+(async () => {
+    initWLED();
+})();
+
+
+function initWLED() {
+    let start = Date.now();
+    const client = dgram.createSocket('udp4');
+
+    // browse for all http services
+    bonjour.find({ type: 'wled' }, function (service) {
+        console.log('Found WLED service:', service)
+        if (service.name === wledName) {
+            console.log('selected service', service.host)
+            wledAddress = service.addresses[0];
+        }
+    })
+
+    setTimeout(() => {
+        console.log('Using WLED address:', wledAddress);
+
+        client.on('error', (err) => {
+            console.log(`client error:\n${err.stack}`);
+            client.close();
+        });
+
+        client.on('message', (msg, rinfo) => {
+            console.log(`client got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        });
+
+        sendDatastream();
+    }, 1000 * 5)
+
+
+    async function sendDatastream() {
+        // console.log('send datastream...', Date.now() - start);
+        start = Date.now();
+        if (process.argv[2] === 'test') {
+            for (let i = 0; i < LED_COUNT; i++) {
+                dataPackage[i] = [
+                    // i,
+                    randomValue(0, 5) * 10,
+                    randomValue(0, 5) * 10,
+                    randomValue(0, 5) * 10
+                ];
+            }
+        }
+
+        if (!allLightsOff() || allOffFirst) {
+            const message = [2, 1, ...dataPackage]
+            allOffFirst = false;
+
+            client.send(Buffer.from(message.flat()), 21324, wledAddress, (err) => {
+                if (err) console.error('ERROR', err)
+            });
+        } else {
+            // console.log('sending nothing for now')
+        }
+
+        setTimeout(_ => {
+            sendDatastream();
+        }, 1000 / UPDATE_FPS);
+    }
+}
 
 function colorFade(start, end, duration, callback) {
     var interval = 25;
@@ -157,9 +133,3 @@ function lerp(a, b, u) {
     return (1 - u) * a + u * b;
 }
 
-function splitInChunks(arr, chunkSize) {
-    var R = [];
-    for (var i = 0, len = arr.length; i < len; i += chunkSize)
-        R.push(arr.slice(i, i + chunkSize));
-    return R;
-}
