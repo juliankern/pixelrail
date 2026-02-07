@@ -9,6 +9,7 @@
   "author": "Julian Kern <mail@juliankern.com>",
   "license": "ISC",
   "dependencies": {
+    "@homebridge/hap-nodejs": "^2.0.2",
     "artnode": "0.0.1",
     "bonjour": "^3.5.0",
     "hap-nodejs": "^0.5.11",
